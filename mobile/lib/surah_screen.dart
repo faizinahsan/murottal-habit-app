@@ -107,7 +107,6 @@ class _SurahScreenState extends State<SurahScreen> {
                               key: _keys.putIfAbsent(-1, GlobalKey.new),
                               label: 'Putar basmalah',
                               words: s.basmalah!.words,
-                              meanings: s.basmalah!.wordMeanings,
                               translation: s.basmalah!.translation,
                               active: active == -1,
                               centered: true,
@@ -123,7 +122,6 @@ class _SurahScreenState extends State<SurahScreen> {
                                 key: _keys.putIfAbsent(i, GlobalKey.new),
                                 label: 'Ayat ${a.number}',
                                 words: a.words,
-                                meanings: a.wordMeanings,
                                 translation: a.translation,
                                 number: a.number,
                                 active: active == i,
@@ -145,13 +143,13 @@ class _SurahScreenState extends State<SurahScreen> {
   }
 }
 
-/// One ayah (or the basmalah): Arabic words that light up with the recitation, the meaning of
-/// the word being recited, and the Indonesian translation. The whole block is one button.
+/// One ayah (or the basmalah): Arabic text and the Indonesian translation. The whole block is one
+/// button and lights up while it is recited (per ayah: word timings were not reliable enough).
 class _Block extends StatelessWidget {
-  const _Block({super.key, required this.label, required this.words, required this.meanings, required this.translation,
+  const _Block({super.key, required this.label, required this.words, required this.translation,
       required this.active, required this.onTap, this.number, this.centered = false});
   final String label, translation;
-  final List<String> words, meanings;
+  final List<String> words;
   final int? number;
   final bool active, centered;
   final VoidCallback onTap;
@@ -159,11 +157,6 @@ class _Block extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Tokens.of(context);
-    final pos = active ? player.wordPos : null;
-    Color wordColor(int k) => pos == null || pos < 0
-        ? t.ink
-        : (k + 1 < pos ? t.ink : (k + 1 == pos ? t.accent : t.inkMuted));
-    final k = words.isEmpty ? 0 : ((pos ?? 1).clamp(1, words.length) - 1);
     return Semantics(
       button: true,
       label: label,
@@ -178,27 +171,13 @@ class _Block extends StatelessWidget {
             child: Column(crossAxisAlignment: centered ? CrossAxisAlignment.center : CrossAxisAlignment.stretch, children: [
               Text.rich(
                 TextSpan(children: [
-                  for (final (i, w) in words.indexed) TextSpan(text: '$w ', style: TextStyle(color: wordColor(i))),
+                  TextSpan(text: '${words.join(' ')} '),
                   if (number != null) TextSpan(text: '۝${toIndic(number!)}', style: TextStyle(color: active ? t.accent : t.inkMuted)),
                 ]),
                 textDirection: TextDirection.rtl,
                 textAlign: centered ? TextAlign.center : TextAlign.right,
                 style: arabic(28, t.ink),
               ),
-              if (active && meanings.length == words.length)
-                ExcludeSemantics( // visual only, like the word highlight
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Column(crossAxisAlignment: centered ? CrossAxisAlignment.center : CrossAxisAlignment.start, children: [
-                      Text('Arti kata', style: TextStyle(fontSize: 12, color: t.inkMuted)),
-                      Row(mainAxisSize: centered ? MainAxisSize.min : MainAxisSize.max, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-                        Text(words[k], textDirection: TextDirection.rtl, style: arabic(22, t.accent, height: 1.6)),
-                        const SizedBox(width: 12),
-                        Flexible(child: Text(meanings[k], style: TextStyle(fontWeight: FontWeight.w600, color: t.ink))),
-                      ]),
-                    ]),
-                  ),
-                ),
               if (translation.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(translation, textAlign: centered ? TextAlign.center : TextAlign.left,

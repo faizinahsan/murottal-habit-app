@@ -23,22 +23,20 @@ test('GET /surahs lists 37 surah without ayat', async () => {
   assert.deepEqual(list.find((s) => s.number === 94).aliases, ['Al-Insyirah', 'Alam Nasyrah']);
 });
 
-test('GET /surahs/78 returns words, audio and segments for every ayah', async () => {
+test('GET /surahs/78 returns text, translation, audio and ayah timings', async () => {
   const s = await (await fetch(`${base}/surahs/78`)).json();
   assert.equal(s.ayat.length, 40);
   const a = s.ayat[1];
   assert.equal(a.words.length, 3); // عن النبإ العظيم
   assert.match(a.audioUrl, /^https:\/\/verses\.quran\.com\/Alafasy\/mp3\/078002\.mp3$/);
-  assert.ok(a.segments.length > 0);
   assert.equal(a.translation, 'Tentang berita yang besar (hari berbangkit),');
-  assert.deepEqual(a.wordMeanings, ['dari/tentang', 'berita', 'besar']);
-  assert.ok(s.ayat.every((x) => x.wordMeanings.length === x.words.length), 'one meaning per word');
+  assert.equal(a.wordMeanings, undefined, 'per-word data removed');
+  assert.equal(a.surahSegments, undefined);
   assert.match(s.audioUrl, /mishari_al_afasy\/murattal\/78\.mp3$/);
   assert.equal(s.ayat[0].start, 0);
   assert.ok(s.ayat.every((x, k) => x.end > x.start && (!k || x.start >= s.ayat[k - 1].start)), 'ayat timed in order');
   assert.equal(s.basmalah.words.length, 4);
   assert.match(s.basmalah.audioUrl, /Alafasy\/mp3\/001001\.mp3$/);
-  assert.ok(s.basmalah.segments.length > 0);
   assert.ok(s.ayat.every((x) => x.translation && !x.translation.includes('<')), 'plain-text translation for every ayah');
 });
 

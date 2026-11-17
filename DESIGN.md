@@ -97,7 +97,9 @@ Player bar: "Ayat sebelumnya", "Putar ayat" / "Jeda", "Ayat berikutnya", switch 
 | Sedang diputar | Ayat aktif tersorot, kata menyala mengikuti bacaan |
 | Surah selesai | Kartu di akhir daftar: "Surah An-Naba' selesai" + "Buka surah An-Nazi'at" |
 
-## 5. Momen: sorotan per kata
+## 5. Momen: sorotan per kata (DIHAPUS)
+
+**Status: dihapus pada 2026-11-17.** Aplikasi sekarang hanya menyorot per ayat: latar `accentSoft` dan terjemahan berwarna `ink` pada ayat yang sedang dibacakan. Sorotan per kata dan baris "Arti kata" dihapus dari PWA, Flutter, dan data API. Alasannya: data waktu Quran.com untuk file audio per surah Alafasy ternyata lebih awal 1-3 detik di banyak ayat (diukur dengan mencocokkan audio per ayat ke file surah), sehingga sorotan kata mendahului bacaan. Batas ayat memakai data yang sama, jadi sorotan per ayat juga bisa berpindah sedikit lebih awal dari bacaan. Catatan di bawah tetap disimpan sebagai riwayat.
 
 Satu-satunya momen di app, dan alasannya fungsional: pendengar bisa mengikuti bacaan kata demi kata, berguna untuk belajar dan menghafal.
 

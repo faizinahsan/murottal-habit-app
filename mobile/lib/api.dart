@@ -8,8 +8,6 @@ import 'package:http/http.dart' as http;
 const apiBase = String.fromEnvironment('API_BASE', defaultValue: 'http://10.0.2.2:8787');
 
 List<String> _strings(dynamic v) => (v as List? ?? const []).cast<String>();
-List<List<int>> _segments(dynamic v) =>
-    (v as List? ?? const []).map((s) => (s as List).map((x) => (x as num).toInt()).toList()).toList();
 
 class SurahMeta {
   SurahMeta.fromJson(Map<String, dynamic> j)
@@ -25,33 +23,27 @@ class SurahMeta {
   final int ayahCount;
 }
 
-/// The basmalah recitation: its own short file, word timings relative to that file.
+/// The basmalah recitation: its own short file.
 class Basmalah {
   Basmalah.fromJson(Map<String, dynamic> j)
       : words = _strings(j['words']),
-        wordMeanings = _strings(j['wordMeanings']),
         translation = j['translation'] ?? '',
-        audioUrl = j['audioUrl'],
-        segments = _segments(j['segments']);
-  final List<String> words, wordMeanings;
+        audioUrl = j['audioUrl'];
+  final List<String> words;
   final String translation, audioUrl;
-  final List<List<int>> segments; // [word position, start ms, end ms]
 }
 
 class Ayah {
   Ayah.fromJson(Map<String, dynamic> j)
       : number = j['number'],
         words = _strings(j['words']),
-        wordMeanings = _strings(j['wordMeanings']),
         translation = j['translation'] ?? '',
         start = (j['start'] as num).toInt(),
-        end = (j['end'] as num).toInt(),
-        surahSegments = _segments(j['surahSegments']);
+        end = (j['end'] as num).toInt();
   final int number;
-  final List<String> words, wordMeanings;
+  final List<String> words;
   final String translation;
   final int start, end; // ms inside the surah file
-  final List<List<int>> surahSegments; // [word position, start ms, end ms] in surah file time
 }
 
 class Surah {

@@ -247,14 +247,14 @@ async function showSurah(n) {
       <p class="meta">${esc(s.nameLatin)}, ${esc(s.meaning)}, ${s.ayahCount} ayat</p>
       ${s.basmalah ? `<button type="button" class="basmalah" id="basmalah">
         <span class="sr-only">Putar basmalah: </span>
-        <span class="ar" lang="ar" dir="rtl">${s.basmalah.words.map((w) => `<span class="w">${esc(w)}</span>`).join(' ')}</span>
+        <span class="ar" lang="ar" dir="rtl">${esc(s.basmalah.words.join(' '))}</span>
         <span class="tr">${esc(s.basmalah.translation)}</span>
       </button>` : '<p class="basmalah" lang="ar" dir="rtl">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>'}
     </div>
     <ol class="ayat">${s.ayat.map((a, i) => `<li data-i="${i}">
       <button type="button" class="ayah" data-i="${i}">
         <span class="sr-only">Ayat ${a.number}: </span>
-        <span class="ar" lang="ar" dir="rtl">${a.words.map((w) => `<span class="w">${esc(w)}</span>`).join(' ')} <span class="mark">۝${toIndic(a.number)}</span></span>
+        <span class="ar" lang="ar" dir="rtl">${esc(a.words.join(' '))} <span class="mark">۝${toIndic(a.number)}</span></span>
         ${a.translation ? `<span class="tr">${esc(a.translation)}</span>` : ''}
       </button></li>`).join('')}</ol>
     <p class="meta source">Terjemahan: Kementerian Agama RI, lewat Quran.com.</p>
@@ -285,12 +285,10 @@ const audio = new Audio(), bsmAudio = new Audio();
 audio.preload = bsmAudio.preload = 'auto';
 // status: idle | loading | playing | paused | stopped (ayah ended, auto off) | done (surah ended) | error
 // bsm: the basmalah is playing (P.i is -1 meanwhile, so "next" goes to ayah 1).
-const P = { surah: null, i: -1, bsm: false, status: 'idle', timer: 0, pos: -1 };
+const P = { surah: null, i: -1, bsm: false, status: 'idle', timer: 0 };
 const cur = () => (P.bsm ? bsmAudio : audio);
 const REPEAT_NOTE = { off: '', ayah: ', diulang', surah: ', surah diulang' };
 const clip = () => (P.bsm ? P.surah?.basmalah : P.surah?.ayat[P.i]);
-// Word timings of what is playing: basmalah file time, or surah file time for an ayah.
-const segsNow = () => (P.bsm ? P.surah?.basmalah?.segments : P.surah?.ayat[P.i]?.surahSegments) ?? [];
 
 function render() {
   const total = P.surah?.ayat.length ?? 0, n = P.i + 1;
@@ -348,37 +346,10 @@ function setActive(i) {
   if (!list) return;
   main.querySelector('.is-active')?.classList.remove('is-active');
   list.querySelector('[aria-current]')?.removeAttribute('aria-current');
-  main.querySelectorAll('.w[data-s]').forEach((w) => delete w.dataset.s);
-  main.querySelector('.wm')?.remove();
   const li = i < 0 ? $('#basmalah') : list.children[i];
   li.classList.add('is-active');
   li.querySelector('.ayah')?.setAttribute('aria-current', 'true');
-  if (clip()?.wordMeanings) {
-    // Meaning of the word being recited; visual only, like the word highlight.
-    const wm = document.createElement('span');
-    wm.className = 'wm';
-    wm.setAttribute('aria-hidden', 'true');
-    li.querySelector('.ar').after(wm);
-  }
-  P.pos = -1;
-  paintWords(0);
   li.scrollIntoView({ block: 'center', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
-}
-
-// Words before the one being recited are "read", the recited one "current", the rest "unread".
-function paintWords(pos) {
-  if (pos === P.pos) return;
-  P.pos = pos;
-  const li = $('#main .is-active');
-  li?.querySelectorAll('.w').forEach((w, k) => {
-    w.dataset.s = k + 1 < pos ? 'read' : k + 1 === pos ? 'current' : 'unread';
-  });
-  const a = clip(), wm = li?.querySelector('.wm');
-  if (wm && a) {
-    // Before the first word starts this shows word 1; after the ayah ends it keeps the last word.
-    const k = Math.min(Math.max(pos, 1), a.words.length) - 1;
-    wm.innerHTML = `<span class="wm-label">Arti kata</span><span class="wm-ar" lang="ar" dir="rtl">${esc(a.words[k])}</span><span class="wm-id">${esc(a.wordMeanings[k])}</span>`;
-  }
 }
 
 // Index of the ayah playing at surah time t (ms).
@@ -389,40 +360,32 @@ function ayahAt(t) {
   return k;
 }
 
-// Runs at each word start and each ayah end (plus timeupdate as a backup): moves the highlight,
-// follows the surah file into the next ayah, and stops at the ayah end when auto-continue is off.
-// Frame callbacks are not used: they are throttled on a locked phone and would skip short words.
+// Runs at each ayah end (plus timeupdate as a backup): moves the highlight to the ayah playing,
+// and stops at the ayah end when auto-continue is off. A timer, not frame callbacks: those are
+// throttled on a locked phone. Highlight is per ayah only: Quran.com's word timings for these
+// surah files run 1-3 s early in places, so word-level highlighting was removed.
 function tick() {
   clearTimeout(P.timer);
-  if (!P.surah) return;
+  if (!P.surah || P.bsm) return;
   const el = cur(), t = el.currentTime * 1000;
-  if (!P.bsm) {
-    const a = P.surah.ayat[P.i], last = P.surah.ayat.length - 1;
-    // Repeat ayah: jump back to its start inside the same file (no new play(), so it works locked).
-    if (repeat === 'ayah' && P.status === 'playing' && (t >= a.end - 30 || ayahAt(t) !== P.i)) {
-      audio.currentTime = a.start / 1000;
-      P.pos = -1;
-      paintWords(0);
-      P.timer = setTimeout(tick, 50);
-      return;
-    }
-    if (repeat !== 'ayah' && !autoEl.checked && P.status === 'playing' && P.i < last && t >= a.end - 30 && t < a.end + 1000) {
-      P.status = 'stopped'; // set first so the pause event keeps it
-      audio.pause();
-      paintWords(Infinity);
-      render(); updateMediaSession();
-      return;
-    }
-    const k = ayahAt(t);
-    if (k !== P.i) { P.i = k; setActive(k); render(); updateMediaSession(); }
+  const a = P.surah.ayat[P.i], last = P.surah.ayat.length - 1;
+  // Repeat ayah: jump back to its start inside the same file (no new play(), so it works locked).
+  if (repeat === 'ayah' && P.status === 'playing' && (t >= a.end - 30 || ayahAt(t) !== P.i)) {
+    audio.currentTime = a.start / 1000;
+    P.timer = setTimeout(tick, 50);
+    return;
   }
-  let pos = 0, next = null;
-  for (const [p, start] of segsNow()) { if (start <= t) pos = p; else { next = start; break; } }
-  paintWords(pos);
+  if (repeat !== 'ayah' && !autoEl.checked && P.status === 'playing' && P.i < last && t >= a.end - 30 && t < a.end + 1000) {
+    P.status = 'stopped'; // set first so the pause event keeps it
+    audio.pause();
+    render(); updateMediaSession();
+    return;
+  }
+  const k = ayahAt(t);
+  if (k !== P.i) { P.i = k; setActive(k); render(); updateMediaSession(); }
   if (el.paused) return;
-  let wake = next;
-  if (!P.bsm) { const end = P.surah.ayat[P.i].end; if (end > t && (wake === null || end < wake)) wake = end; }
-  if (wake !== null && wake > t) P.timer = setTimeout(tick, Math.max(16, (wake - t) / (el.playbackRate || 1)));
+  const wake = P.surah.ayat[P.i].end;
+  if (wake > t) P.timer = setTimeout(tick, Math.max(16, (wake - t) / (el.playbackRate || 1)));
 }
 
 // NotAllowedError: the browser refused to start on its own (the queue moved on while the phone was
@@ -475,7 +438,7 @@ function onBasmalahTap() {
 function stopAudio() {
   clearTimeout(P.timer);
   for (const el of [audio, bsmAudio]) { el.pause(); el.removeAttribute('src'); el.load(); }
-  Object.assign(P, { surah: null, i: -1, bsm: false, status: 'idle', pos: -1 });
+  Object.assign(P, { surah: null, i: -1, bsm: false, status: 'idle' });
   updateMediaSession();
 }
 
@@ -495,14 +458,11 @@ bsmAudio.addEventListener('ended', () => {
   if (!P.bsm) return;
   P.bsm = false;
   main.querySelector('.is-active')?.classList.remove('is-active');
-  main.querySelectorAll('.w[data-s]').forEach((w) => delete w.dataset.s);
-  main.querySelector('.wm')?.remove();
   setStatus('idle');
 });
 // Only fires with repeat off: any repeat sets audio.loop, so the file never ends.
 audio.addEventListener('ended', () => {
   if (P.bsm || !P.surah) return;
-  paintWords(Infinity);
   if (playQueueNext()) return;
   setStatus('done');
   const done = $('#done');

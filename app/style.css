@@ -104,7 +104,6 @@ button.basmalah:active { transform: scale(.985); transition-duration: var(--m-pr
   button.basmalah:hover:not(.is-active) { background: color-mix(in srgb, var(--accent-soft) 50%, transparent); }
 }
 .basmalah .ar { display: block; font-size: 1.75rem; line-height: 2; }
-.basmalah .wm { grid-template-columns: auto auto; justify-content: center; }
 .basmalah.is-active { background: var(--accent-soft); }
 @keyframes enter { from { opacity: 0; transform: translateY(8px); } }
 
@@ -121,15 +120,6 @@ button.basmalah:active { transform: scale(.985); transition-duration: var(--m-pr
 .is-active .mark { color: var(--accent); }
 .is-active .tr { color: var(--ink); }
 .source { margin-top: 24px; }
-/* Word meaning line: only on the active ayah, height reserved so the text below does not jump per word. */
-.wm { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: 12px; min-height: 4.25rem; margin-top: 4px; text-align: left; }
-.wm-label { grid-column: 1 / -1; }
-.wm-label { font-family: var(--font-ui); font-size: .75rem; color: var(--ink-muted); }
-.wm-ar { font-family: var(--font-ar); font-size: 1.375rem; line-height: 1.6; color: var(--accent); }
-.wm-id { font-weight: 600; color: var(--ink); }
-.w { transition: color var(--m-in) var(--ease); }
-.w[data-s="unread"] { color: var(--ink-muted); }
-.w[data-s="current"] { color: var(--accent); }
 
 .done { display: grid; gap: 4px; justify-items: start; margin-top: 16px; padding: 20px; border-radius: 12px; background: var(--accent-soft); }
 .done .btn { margin-top: 12px; }

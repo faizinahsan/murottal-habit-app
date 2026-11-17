@@ -29,7 +29,6 @@ class PlayerController extends ChangeNotifier {
   Surah? surah; // surah whose audio is loaded (null before the first play)
   int ayah = -1; // index into surah.ayat, -1 before the first ayah
   bool basmalah = false; // the standalone basmalah clip is loaded instead of the playlist
-  int wordPos = 0; // 1-based position of the word being recited, 0 before the first
   Status status = Status.idle;
   Repeat repeat = Repeat.off;
   bool autoContinue = true;
@@ -70,7 +69,6 @@ class PlayerController extends ChangeNotifier {
     surah = s;
     ayah = i;
     basmalah = false;
-    wordPos = 0;
     _set(Status.loading);
     try {
       if (!sameFile) {
@@ -98,7 +96,6 @@ class PlayerController extends ChangeNotifier {
     surah = s;
     ayah = -1;
     basmalah = true;
-    wordPos = 0;
     _playlist = [];
     _set(Status.loading);
     try {
@@ -213,7 +210,6 @@ class PlayerController extends ChangeNotifier {
         ayah = -1;
         _set(Status.idle);
       } else {
-        wordPos = 1 << 20; // every word read
         _set(Status.done);
       }
     } else if (ps == ProcessingState.loading || ps == ProcessingState.buffering) {
@@ -237,7 +233,6 @@ class PlayerController extends ChangeNotifier {
     try {
       surah = await api.surah(n);
       ayah = 0;
-      wordPos = 0;
       _surahChanged.add(n);
       notifyListeners();
     } catch (_) {}
@@ -246,48 +241,26 @@ class PlayerController extends ChangeNotifier {
   void _onPosition(Duration p) {
     final s = surah;
     if (s == null || !_player.playing) return;
+    if (basmalah) return;
     final t = p.inMilliseconds;
-    if (basmalah) {
-      _paintWords(s.basmalah!.segments, t);
-      return;
-    }
     if (_player.currentIndex != 0 || ayah < 0) return; // queue transition in flight
     final a = s.ayat[ayah];
     // Repeat ayah: jump back inside the same file; no new playback is started, so it works locked.
     if (repeat == Repeat.ayah && (t >= a.end - 30 || s.ayahAt(t) != ayah)) {
       _player.seek(Duration(milliseconds: a.start));
-      wordPos = 0;
-      notifyListeners();
       return;
     }
     if (repeat == Repeat.off && !autoContinue && ayah < s.ayat.length - 1 && t >= a.end - 30 && t < a.end + 1000) {
       status = Status.stopped; // before pausing, so the state listener keeps it
-      wordPos = 1 << 20;
       _player.pause();
       notifyListeners();
       return;
     }
+    // Highlight is per ayah only: Quran.com's word timings for these surah files run 1-3 s early
+    // in places, so word-level highlighting was removed. Rebuild only when the ayah changes.
     final k = s.ayahAt(t);
-    final moved = k != ayah;
-    if (moved) {
+    if (k != ayah) {
       ayah = k;
-      wordPos = -1; // forces a repaint below
-    }
-    _paintWords(s.ayat[ayah].surahSegments, t);
-  }
-
-  // Rebuilds the UI only when the recited word (or ayah) actually changes.
-  void _paintWords(List<List<int>> segs, int t) {
-    var pos = 0;
-    for (final g in segs) {
-      if (g[1] <= t) {
-        pos = g[0];
-      } else {
-        break;
-      }
-    }
-    if (pos != wordPos) {
-      wordPos = pos;
       notifyListeners();
     }
   }
