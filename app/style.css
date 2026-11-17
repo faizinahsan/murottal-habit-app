@@ -1,0 +1,180 @@
+/* Tokens from DESIGN.md. Light is the default; dark follows the system unless the user picked a theme. */
+:root {
+  color-scheme: light;
+  --paper: #F6F1E7; --ink: #1F1B16; --ink-muted: #5C5346;
+  --accent: #1F5F4A; --accent-soft: #E3EDE6; --on-accent: #F6F1E7; --line: #DDD3C2;
+  --font-ar: 'Amiri Quran', 'Amiri', serif;
+  --font-latin: 'Literata', Georgia, serif;
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --m-in: 150ms; --m-out: 120ms; --m-press: 90ms; --m-panel: 200ms;
+  --ease: cubic-bezier(.2, .8, .2, 1); --ease-enter: cubic-bezier(.22, 1, .36, 1);
+  --gutter: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #14120F; --ink: #EDE6D8; --ink-muted: #A99F8E;
+    --accent: #7FC2A5; --accent-soft: #1F2E27; --on-accent: #14120F; --line: #2E2A24;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #14120F; --ink: #EDE6D8; --ink-muted: #A99F8E;
+  --accent: #7FC2A5; --accent-soft: #1F2E27; --on-accent: #14120F; --line: #2E2A24;
+}
+@media (min-width: 768px) { :root { --gutter: 32px; } }
+
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-latin); font-size: 1rem; line-height: 1.5; -webkit-tap-highlight-color: transparent; }
+button, input, a, label { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .4; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.skip { position: absolute; left: var(--gutter); top: -100px; z-index: 10; background: var(--accent); color: var(--on-accent); padding: 12px 16px; font-family: var(--font-ui); }
+.skip:focus { top: 8px; }
+
+/* One content column; header, list and player share the same edges. */
+.col { max-width: 720px; margin-inline: auto; padding-inline: var(--gutter); }
+main { padding-bottom: 200px; outline: none; }
+.meta { font-size: .875rem; line-height: 1.45; color: var(--ink-muted); }
+[lang="ar"] { font-family: var(--font-ar); font-weight: 400; }
+
+/* Top bar */
+.topbar { padding-top: max(24px, env(safe-area-inset-top)); }
+.bar { display: flex; align-items: center; gap: 4px; min-height: 64px; }
+.bar > div { flex: 1; }
+.bar h1 { font-size: 1.375rem; line-height: 1.3; font-weight: 600; outline: none; }
+.back { display: inline-flex; align-items: center; gap: 4px; min-height: 48px; padding-right: 12px; font-family: var(--font-ui); font-size: .875rem; color: var(--ink-muted); }
+.back svg { color: var(--ink); }
+
+/* Buttons */
+.icon-btn { display: inline-grid; place-items: center; width: 48px; height: 48px; color: var(--ink); }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 20px; border-radius: 12px;
+  background: var(--accent); color: var(--on-accent); font-family: var(--font-ui); font-size: .875rem; font-weight: 500;
+  transition: transform var(--m-out) var(--ease), background-color var(--m-out) var(--ease); }
+.btn-wide { width: 100%; }
+.play { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 999px; background: var(--accent); color: var(--on-accent);
+  transition: transform var(--m-out) var(--ease), background-color var(--m-out) var(--ease); }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover, .play:hover { background: color-mix(in srgb, var(--accent) 86%, var(--ink)); transform: translateY(-1px); transition-duration: var(--m-in); }
+  .icon-btn:hover:not(:disabled), .back:hover { color: var(--accent); }
+  .row:hover { background: color-mix(in srgb, var(--accent-soft) 50%, transparent); }
+  .ayah:hover { background: color-mix(in srgb, var(--accent-soft) 50%, transparent); }
+}
+.btn:active, .play:active { transform: translateY(1px) scale(.985); transition-duration: var(--m-press); }
+.row:active, .ayah:active { transform: scale(.985); transition-duration: var(--m-press); }
+
+/* Surah list */
+.surahs { list-style: none; padding: 8px 0 0; }
+.surahs li { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--line); }
+.row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 16px; min-height: 72px; padding: 12px 0;
+  transition: background-color var(--m-out) var(--ease), transform var(--m-out) var(--ease); }
+.row .num { width: 28px; font-family: var(--font-ui); font-size: .75rem; font-weight: 500; color: var(--ink-muted); }
+.row .names { flex: 1; display: grid; gap: 2px; }
+.row .ar { font-size: 1.5rem; line-height: 1.6; }
+
+/* Search */
+.search { display: grid; gap: 8px; padding-top: 16px; }
+.search label { font-family: var(--font-ui); font-size: .875rem; font-weight: 500; }
+.search input { appearance: none; width: 100%; min-height: 48px; padding: 0 16px; border: 1px solid var(--ink-muted); border-radius: 12px;
+  background: transparent; color: var(--ink); font: 1rem var(--font-ui); cursor: text; }
+.search input::placeholder { color: var(--ink-muted); opacity: 1; }
+.search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+
+/* Skeletons and messages */
+.skeleton { list-style: none; padding: 8px 0 0; }
+.skeleton li { display: flex; align-items: center; gap: 16px; height: 72px; border-bottom: 1px solid var(--line); }
+.bone { display: block; height: 14px; border-radius: 4px; background: var(--line); }
+.skeleton-ayah { display: grid; gap: 24px; padding-top: 24px; }
+.skeleton-ayah .bone { height: 56px; border-radius: 12px; }
+.message { display: grid; gap: 12px; justify-items: start; padding-top: 64px; }
+.message-inline { padding-top: 40px; }
+
+/* Surah page */
+.surah-head { text-align: center; padding-top: 24px; }
+.surah-head h1 { font-size: 3.5rem; line-height: 1.7; outline: none; animation: enter 450ms var(--ease-enter) both; }
+.surah-head .meta { animation: enter 450ms var(--ease-enter) 150ms both; }
+.basmalah { display: block; width: 100%; margin-top: 24px; padding: 16px; border-radius: 12px; text-align: center;
+  transition: background-color var(--m-panel) var(--ease), transform var(--m-out) var(--ease); }
+button.basmalah:active { transform: scale(.985); transition-duration: var(--m-press); }
+@media (hover: hover) and (pointer: fine) {
+  button.basmalah:hover:not(.is-active) { background: color-mix(in srgb, var(--accent-soft) 50%, transparent); }
+}
+.basmalah .ar { display: block; font-size: 1.75rem; line-height: 2; }
+.basmalah .wm { grid-template-columns: auto auto; justify-content: center; }
+.basmalah.is-active { background: var(--accent-soft); }
+@keyframes enter { from { opacity: 0; transform: translateY(8px); } }
+
+.ayat { list-style: none; padding: 16px 0 0; display: grid; gap: 8px; }
+.ayah { display: block; width: 100%; padding: 16px; border-radius: 12px; text-align: right;
+  transition: background-color var(--m-panel) var(--ease), transform var(--m-out) var(--ease); }
+.ayah .ar { display: block; font-size: 1.75rem; line-height: 2; }
+.ayah .mark { color: var(--ink-muted); }
+/* Translation reads left to right under the Arabic; muted at rest, full ink on the ayah being recited. */
+.tr { display: block; margin-top: 8px; font-size: 1rem; line-height: 1.6; color: var(--ink-muted);
+  transition: color var(--m-panel) var(--ease); }
+.ayah .tr { text-align: left; }
+.is-active .ayah { background: var(--accent-soft); }
+.is-active .mark { color: var(--accent); }
+.is-active .tr { color: var(--ink); }
+.source { margin-top: 24px; }
+/* Word meaning line: only on the active ayah, height reserved so the text below does not jump per word. */
+.wm { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: 12px; min-height: 4.25rem; margin-top: 4px; text-align: left; }
+.wm-label { grid-column: 1 / -1; }
+.wm-label { font-family: var(--font-ui); font-size: .75rem; color: var(--ink-muted); }
+.wm-ar { font-family: var(--font-ar); font-size: 1.375rem; line-height: 1.6; color: var(--accent); }
+.wm-id { font-weight: 600; color: var(--ink); }
+.w { transition: color var(--m-in) var(--ease); }
+.w[data-s="unread"] { color: var(--ink-muted); }
+.w[data-s="current"] { color: var(--accent); }
+
+.done { display: grid; gap: 4px; justify-items: start; margin-top: 16px; padding: 20px; border-radius: 12px; background: var(--accent-soft); }
+.done .btn { margin-top: 12px; }
+
+/* Player */
+.player { position: fixed; inset: auto 0 0; background: var(--paper); border-top: 1px solid var(--line); }
+.player .col { display: grid; gap: 8px; padding-top: 12px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.status-row { display: flex; align-items: center; gap: 12px; }
+.status { flex: 1; font-family: var(--font-ui); font-size: .875rem; color: var(--ink-muted); }
+.status.is-error { color: var(--ink); }
+/* Five controls spread over one capped row, so they fit from 320px phones up without crowding play. */
+.controls { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 360px; margin-inline: auto; }
+/* Repeat on, surah already queued: accent plus a different icon shape (never color alone). */
+.icon-btn.is-on { color: var(--accent); }
+.q-open { position: relative; }
+.badge { position: absolute; top: 4px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  background: var(--accent); color: var(--on-accent); font: 600 .6875rem/18px var(--font-ui); text-align: center; }
+.switch { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; font-family: var(--font-ui); font-size: .875rem; }
+/* Off: outlined in ink-muted so the control keeps 3:1 against the page in both themes. */
+.switch input { appearance: none; position: relative; width: 44px; height: 24px; border-radius: 999px; background: transparent;
+  box-shadow: inset 0 0 0 2px var(--ink-muted); transition: background-color var(--m-in) var(--ease); }
+.switch input::before { content: ''; position: absolute; top: 5px; left: 5px; width: 14px; height: 14px; border-radius: 999px; background: var(--ink-muted);
+  transition: transform var(--m-in) var(--ease); }
+.switch input:checked { background: var(--accent); box-shadow: none; }
+.switch input:checked::before { transform: translateX(20px); background: var(--on-accent); }
+.spin { animation: spin 900ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Queue sheet */
+.sheet { width: min(560px, 100% - 32px); max-height: 85vh; margin: auto; padding: 20px; border: 0; border-radius: 12px;
+  background: var(--paper); color: var(--ink); }
+.sheet::backdrop { background: rgb(0 0 0 / .45); }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; }
+.sheet-head h2 { font-size: 1.375rem; font-weight: 600; }
+.queue-list { list-style: none; padding: 12px 0 0; }
+.queue-list li { display: flex; align-items: center; gap: 16px; min-height: 64px; border-bottom: 1px solid var(--line); }
+.queue-list .num { width: 20px; font-family: var(--font-ui); font-size: .75rem; color: var(--ink-muted); }
+.queue-list .names { flex: 1; display: grid; }
+.queue-empty { padding: 24px 0 8px; }
+.sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.btn-quiet { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink-muted); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-quiet:hover { background: color-mix(in srgb, var(--accent-soft) 60%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

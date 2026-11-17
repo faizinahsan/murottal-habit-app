@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Murottal Juz 30</title>
+  <meta name="description" content="Dengarkan Juz 30 bacaan Mishary Rashid Alafasy ayat per ayat, dengan sorotan kata yang mengikuti bacaan.">
+  <!-- Empty = the API is on the same address as the app (api/server.js serves both). Set a full URL if the API lives elsewhere. -->
+  <meta name="api-base" content="">
+  <meta name="theme-color" content="#F6F1E7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14120F" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script>try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}</script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Langsung ke isi</a>
+  <header id="topbar" class="topbar"></header>
+  <main id="main" tabindex="-1"></main>
+  <footer id="player" class="player" hidden>
+    <div class="col">
+      <div class="status-row">
+        <p id="status" class="status" aria-live="polite"></p>
+        <label class="switch">
+          <input type="checkbox" id="auto" role="switch" checked>
+          <span>Lanjut otomatis</span>
+        </label>
+      </div>
+      <div id="controls" class="controls">
+        <button type="button" class="icon-btn" id="repeat"></button>
+        <button type="button" class="icon-btn" id="prev" aria-label="Ayat sebelumnya"></button>
+        <button type="button" class="play" id="play" aria-label="Putar ayat"></button>
+        <button type="button" class="icon-btn" id="next" aria-label="Ayat berikutnya"></button>
+        <button type="button" class="icon-btn q-open" id="queue-open" data-queue-open><span class="badge" aria-hidden="true" hidden></span></button>
+      </div>
+      <button type="button" class="btn btn-wide" id="retry" hidden></button>
+    </div>
+  </footer>
+  <dialog id="queue" class="sheet" aria-labelledby="queue-title">
+    <div class="sheet-head">
+      <h2 id="queue-title">Antrean</h2>
+      <button type="button" class="icon-btn" id="queue-close" aria-label="Tutup antrean"></button>
+    </div>
+    <p class="meta">Setelah surah yang sedang diputar selesai, surah di antrean diputar berurutan.</p>
+    <ol id="queue-list" class="queue-list"></ol>
+    <p id="queue-empty" class="meta queue-empty">Antrean masih kosong. Tambahkan surah dengan tombol + di daftar surah.</p>
+    <div class="sheet-actions">
+      <button type="button" class="btn" id="queue-play">Putar antrean</button>
+      <button type="button" class="btn btn-quiet" id="queue-clear">Kosongkan antrean</button>
+    </div>
+  </dialog>
+</body>
+</html>
